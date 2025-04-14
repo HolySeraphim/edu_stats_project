@@ -1,0 +1,20 @@
+{% extends 'grades/base.html' %}
+
+{% block content %}
+<div class="container text-center mt-5">
+    <h1>Добро пожаловать в EduStats</h1>
+    <p class="lead">Система мониторинга успеваемости студентов</p>
+    
+    <div class="row mt-5">
+        <div class="col-md-4">
+            <a href="{% url 'grades:students_list' %}" class="btn btn-primary btn-lg">Студенты</a>
+        </div>
+        <div class="col-md-4">
+            <a href="{% url 'grades:grades_list' %}" class="btn btn-success btn-lg">Оценки</a>
+        </div>
+        <div class="col-md-4">
+            <a href="{% url 'grades:statistics' %}" class="btn btn-info btn-lg">Статистика</a>
+        </div>
+    </div>
+</div>
+{% endblock %}

@@ -1,0 +1,27 @@
+{% extends 'grades/base.html' %}
+
+{% block content %}
+<div class="container mt-4">
+    <div class="card">
+        <div class="card-header bg-danger text-white">
+            <h4>Удаление студента</h4>
+        </div>
+        <div class="card-body">
+            <p>Вы уверены, что хотите удалить студента <strong>{{ student.name }}</strong> ({{ student.group }})?</p>
+            <p class="text-danger">Все связанные оценки также будут удалены!</p>
+            
+            <form method="post">
+                {% csrf_token %}
+                <div class="mt-4">
+                    <button type="submit" class="btn btn-danger">
+                        <i class="bi bi-trash-fill"></i> Удалить
+                    </button>
+                    <a href="{% url 'grades:students_list' %}" class="btn btn-secondary">
+                        <i class="bi bi-x-circle"></i> Отмена
+                    </a>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+{% endblock %}

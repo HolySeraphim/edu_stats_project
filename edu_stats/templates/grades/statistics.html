@@ -1,0 +1,104 @@
+{% extends 'grades/base.html' %}
+
+{% block title %}Статистика успеваемости{% endblock %}
+
+{% block content %}
+<div class="container">
+    <h2 class="mb-4">{{ title }}</h2>
+
+    {% if not subjects_stats and not group_stats and not top_students %}
+    <div class="alert alert-warning">
+        Нет данных для отображения статистики. Требуется:
+        <ul>
+            <li>Добавить <a href="{% url 'admin:edu_stats_subject_add' %}">предметы</a></li>
+            <li>Добавить <a href="{% url 'grades:add_student' %}">студентов</a></li>
+            <li>Добавить <a href="{% url 'grades:add_grade' %}">оценки</a></li>
+        </ul>
+    </div>
+    {% endif %}
+
+    {% if subjects_stats %}
+    <div class="card mb-4">
+        <div class="card-header bg-primary text-white">
+            <h4>Средние оценки по предметам</h4>
+        </div>
+        <div class="card-body">
+            <div class="table-responsive">
+                <table class="table table-hover">
+                    <thead>
+                        <tr>
+                            <th>Предмет</th>
+                            <th>Средний балл</th>
+                            <th>Кол-во оценок</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for subject in subjects_stats %}
+                        <tr>
+                            <td>{{ subject.name }}</td>
+                            <td>{{ subject.avg_grade|floatformat:2 }}</td>
+                            <td>{{ subject.grade_count }}</td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+    {% endif %}
+
+    
+</div>
+
+{% block scripts %}
+<script>
+    // График по предметам
+    const subjectsCtx = document.getElementById('subjectsChart').getContext('2d');
+    new Chart(subjectsCtx, {
+        type: 'bar',
+        data: {
+            labels: [{% for stat in subjects_stats %}'{{ stat.name }} ',{% endfor %}],
+            datasets: [{
+                label: 'Средняя оценка',
+                data: [{% for stat in subjects_stats %}{{ stat.avg_grade|default:0 }},{% endfor %}],
+                backgroundColor: 'rgba(54, 162, 235, 0.5)',
+                borderColor: 'rgba(54, 162, 235, 1)',
+                borderWidth: 1
+            }]
+        },
+        options: {
+            scales: {
+                y: {
+                    beginAtZero: true,
+                    max: 5
+                }
+            }
+        }
+    });
+
+    // График по группам
+    const groupsCtx = document.getElementById('groupsChart').getContext('2d');
+    new Chart(groupsCtx, {
+        type: 'bar',
+        data: {
+            labels: [{% for stat in group_stats %}'{{ stat.student__group }}',{% endfor %}],
+            datasets: [{
+                label: 'Средняя оценка',
+                data: [{% for stat in group_stats %}{{ stat.avg_grade|default:0 }},{% endfor %}],
+                backgroundColor: 'rgba(255, 99, 132, 0.5)',
+                borderColor: 'rgba(255, 99, 132, 1)',
+                borderWidth: 1
+            }]
+        },
+        options: {
+            scales: {
+                y: {
+                    beginAtZero: true,
+                    max: 5
+                }
+            }
+        }
+    });
+</script>
+{% endblock %}
+{% endblock %}
