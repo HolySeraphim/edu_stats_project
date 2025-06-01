@@ -14,6 +14,7 @@ INSTALLED_APPS = [
     'django.contrib.messages',
     'django.contrib.staticfiles',
     'edu_stats.apps.EduStatsConfig',
+    'edu_stats.grades.apps.GradesConfig',
 ]
 
 MIDDLEWARE = [

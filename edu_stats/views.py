@@ -3,6 +3,7 @@ from django.views.generic import ListView
 from django.db.models import Avg, Count
 from .models import Grade, Student, Subject
 from .forms import StudentForm, GradeForm, SubjectForm
+from collections import defaultdict
 
 
 def home_view(request):
@@ -137,3 +138,61 @@ class SubjectListView(ListView):
     model = Subject
     template_name = 'grades/subjects_list.html'
     context_object_name = 'subjects'
+
+
+def grades_table_view(request):
+    # Получаем параметры фильтрации
+    subject_id = request.GET.get('subject')  # Новый параметр для предмета
+    student_id = request.GET.get('student')
+    date_from = request.GET.get('date_from')
+    date_to = request.GET.get('date_to')
+
+    # Базовый запрос с фильтрацией
+    grades = Grade.objects.all()
+
+    if subject_id:  # Фильтр по предмету
+        grades = grades.filter(subject_id=subject_id)
+    if student_id:
+        grades = grades.filter(student_id=student_id)
+    if date_from:
+        grades = grades.filter(date__gte=date_from)
+    if date_to:
+        grades = grades.filter(date__lte=date_to)
+
+    # Получаем уникальные даты для столбцов
+    dates = grades.dates('date', 'day').order_by('date')
+
+    # Группируем оценки и вычисляем средние
+    student_grades = defaultdict(dict)
+    student_averages = {}  # Новый словарь для средних значений
+
+    for grade in grades:
+        student_grades[grade.student][grade.date] = grade.grade
+
+    # Вычисляем средний балл для каждого студента
+    for student in student_grades:
+        grades_list = list(student_grades[student].values())
+        student_averages = {
+            student: grades.filter(student=student).aggregate(Avg('grade'))['grade__avg']
+            for student in Student.objects.filter(grades__in=grades).distinct()
+        }
+
+    # Сортируем студентов по имени
+    sorted_students = sorted(
+        student_grades.keys(),
+        key=lambda s: student_averages.get(s, 0),
+        reverse=True
+    )
+
+    context = {
+        'title': 'Таблица оценок',
+        'dates': dates,
+        'student_grades': dict(student_grades),
+        'sorted_students': sorted_students,
+        'student_list': Student.objects.all().order_by('name'),
+        'subject_list': Subject.objects.all().order_by('name'),  # Список предметов для фильтра
+        'selected_subject_id': int(subject_id) if subject_id else None,  # Для сохранения выбора
+        'request': request,
+        'student_averages': student_averages,
+    }
+    return render(request, 'grades/grades_table.html', context)
